@@ -7,12 +7,12 @@
         "max":0.49
     }, {
         "name": "borderWidth",
-        "default": 3,
+        "default": 5,
         "type": "double",
         "min":0
     }, {
         "name": "amplification",
-        "default": 10,
+        "default": 30,
         "type": "double",
         "max":50,
         "min":0
@@ -22,6 +22,11 @@
         "type": "float",
         "max":360,
         "min":0
+    }, {
+        "name": "barAmount",
+        "default": 512,
+        "type": "int",
+        "min":1
     }
     ]
 }
