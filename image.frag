@@ -4,6 +4,7 @@
 #define borderWidth $borderWidth
 #define amplification $amplification
 #define circleRotationOffset $circleRotationOffset
+#define barAmount $barAmount
 
 //converts euclidean to polar coordinates (x,y) -> (phi,r)
 vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
@@ -12,6 +13,7 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
     float dy = vec.y - cy;
 
     float phi = atan(dy, dx) - (circleRotationOffset / 360) * 2 * 3.1415926535;
+    phi = mod(phi + 3.1415926535, 2 * 3.1415926535) - 3.1415926535;
     float r = sqrt(pow(dx,2) + pow(dy,2));
 
     return vec2(phi,r);
@@ -36,6 +38,10 @@ vec2 polarToEuclidean(in vec2 vec, in float cx, in float cy) {
     return vec2(x,y);
 }
 
+vec4 getRealRGB(float x, float alpha){
+    return vec4(getRGB(x) * alpha, alpha);
+}
+
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
@@ -57,7 +63,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         
     }
 
-    vec4 data = texture(iChannel1, vec2(divideIntoSections(normalized, 1024), 0));
+    vec4 data = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount / 2), 0));
 
     
     if(polar.x > 0){
@@ -72,13 +78,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
 
 
-    if(polar.y < r + amp && polar.y > r - borderWidth){
+    if(polar.y > r - borderWidth){
         float rgbX = normalized;
         if(rgbX > 0.5){
             rgbX = 1 - rgbX;
         }
-        fragColor.rgb=getRGB(rgbX);
-        fragColor.a=1;
+        if(polar.y < r + amp){
+            fragColor=getRealRGB(rgbX, 1);
+            //fragColor=vec4(02,0,0, mod(polar.x,0.1) > 0.05 ? 1.0 : 0.1);
+        }else if(polar.y - r - amp < 5){
+            fragColor=getRealRGB(rgbX, 0.05 );
+        }else{
+            fragColor = vec4(0,0,0,0);
+        }
     }else{
         fragColor = vec4(0,0,0,0);
     }
