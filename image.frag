@@ -5,6 +5,8 @@
 #define amplification $amplification
 #define circleRotationOffset $circleRotationOffset
 #define barAmount $barAmount
+#define smoothing $smoothing
+#define smoothingLevel $smoothingLevel
 
 //converts euclidean to polar coordinates (x,y) -> (phi,r)
 vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
@@ -19,13 +21,11 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
     return vec2(phi,r);
 }
 
-float divideIntoSections(in float x, in int sectionAmount) {
+float divideIntoSections(in float x, in float sectionAmount) {
 
     float sectionSize = (3.1415926535) / sectionAmount;
 
     return floor(x / sectionSize) * sectionSize;
-
-    
 }
 
 
@@ -41,7 +41,6 @@ vec2 polarToEuclidean(in vec2 vec, in float cx, in float cy) {
 vec4 getRealRGB(float x, float alpha){
     return vec4(getRGB(x) * alpha, alpha);
 }
-
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
@@ -63,9 +62,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         
     }
 
-    vec4 data = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount / 2), 0));
+    vec4 data;// = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount / 2), 0));
+    vec4 oldData;
+    if(smoothing){
+        for(int i = 0;i<smoothingLevel;i++){
+            data = data + texelFetch(iChannel2, ivec2(int(divideIntoSections(normalized, barAmount) * iResolution.x), i), 0);
+        }
+        data = data / smoothingLevel;
+    }else{
+        data = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount), 0));
+    }
 
     
+
     if(polar.x > 0){
     
         amp = data.r * amplification;
@@ -77,22 +86,24 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     }
 
 
-
     if(polar.y > r - borderWidth){
-        float rgbX = normalized;
+        float rgbX = mod((polar.x + 3.1415926535)/(2*3.1415926535) + float(iTime) * 0.1, 1);
         if(rgbX > 0.5){
             rgbX = 1 - rgbX;
         }
         if(polar.y < r + amp){
-            fragColor=getRealRGB(rgbX, 1);
+            fragColor=getRealRGB(rgbX * 2, 1);
             //fragColor=vec4(02,0,0, mod(polar.x,0.1) > 0.05 ? 1.0 : 0.1);
         }else if(polar.y - r - amp < 5){
-            fragColor=getRealRGB(rgbX, 0.05 );
+            //fragColor=getRealRGB(rgbX, 0.05 );
         }else{
             fragColor = vec4(0,0,0,0);
         }
     }else{
         fragColor = vec4(0,0,0,0);
     }
-
+    if(iBeat > 0){
+        fragColor = vec4(1.,1.,1.,1.);
+    }
+    
 }

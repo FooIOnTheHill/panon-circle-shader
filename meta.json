@@ -27,6 +27,15 @@
         "default": 512,
         "type": "int",
         "min":1
+    }, {
+        "name": "smoothing",
+        "default": true,
+        "type": "bool"
+    }, {
+        "name": "smoothingLevel",
+        "default": 2,
+        "type": "float",
+        "min": 2
     }
     ]
 }
