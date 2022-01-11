@@ -36,6 +36,30 @@
         "default": 2,
         "type": "float",
         "min": 2
+    }, {
+        "name": "rotateColor",
+        "default": true,
+        "type": "bool"
+    }, {
+        "name": "colorBaseRotationSpeed",
+        "default": 0.1,
+        "type": "float"
+    }, {
+        "name": "colorRotationVolumeAcceleration",
+        "default": 0.1,
+        "type": "float"
+    }, {
+        "name": "rotateCircle",
+        "default": false,
+        "type": "bool"
+    }, {
+        "name": "circleBaseRotationSpeed",
+        "default": 0.1,
+        "type": "float"
+    }, {
+        "name": "circleRotationVolumeAcceleration",
+        "default": 0.1,
+        "type": "float"
     }
     ]
 }

@@ -7,14 +7,23 @@
 #define barAmount $barAmount
 #define smoothing $smoothing
 #define smoothingLevel $smoothingLevel
+#define rotateColor $rotateColor
+#define rotateCircle $rotateCircle
+#define colorBaseRotationSpeed $colorBaseRotationSpeed
+#define colorRotationVolumeAcceleration $colorRotationVolumeAcceleration
+#define circleBaseRotationSpeed $circleBaseRotationSpeed
+#define circleRotationVolumeAcceleration $circleRotationVolumeAcceleration
 
 //converts euclidean to polar coordinates (x,y) -> (phi,r)
 vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
 
     float dx = vec.x - cx;
     float dy = vec.y - cy;
-
+    float volume = texelFetch(iChannel2, ivec2(0, smoothingLevel),0).x;
     float phi = atan(dy, dx) - (circleRotationOffset / 360) * 2 * 3.1415926535;
+    if(rotateCircle){
+        phi -= float(iTime) * (volume * circleRotationVolumeAcceleration + circleBaseRotationSpeed);
+    }
     phi = mod(phi + 3.1415926535, 2 * 3.1415926535) - 3.1415926535;
     float r = sqrt(pow(dx,2) + pow(dy,2));
 
@@ -23,7 +32,7 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
 
 float divideIntoSections(in float x, in float sectionAmount) {
 
-    float sectionSize = (3.1415926535) / sectionAmount;
+    float sectionSize = (3.1415926535) / (sectionAmount * 2);
 
     return floor(x / sectionSize) * sectionSize;
 }
@@ -44,7 +53,10 @@ vec4 getRealRGB(float x, float alpha){
 
 void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
-    float r = circleRadius * iResolution.y;
+
+    float volume = texelFetch(iChannel2, ivec2(0, smoothingLevel),0).x;
+
+    float r = circleRadius * iResolution.y + volume * 200.0;
     float strokeWidth = borderWidth;
 
     float cx = iResolution.x / 2;
@@ -66,7 +78,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec4 oldData;
     if(smoothing){
         for(int i = 0;i<smoothingLevel;i++){
-            data = data + texelFetch(iChannel2, ivec2(int(divideIntoSections(normalized, barAmount) * iResolution.x), i), 0);
+            data = data + texelFetch(iChannel2, ivec2(divideIntoSections(normalized, barAmount) * iResolution.x, i), 0);
         }
         data = data / smoothingLevel;
     }else{
@@ -87,7 +99,8 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
 
     if(polar.y > r - borderWidth){
-        float rgbX = mod((polar.x + 3.1415926535)/(2*3.1415926535) + float(iTime) * 0.1, 1);
+        float colorOffset = rotateColor ? float(iTime) * (volume * colorRotationVolumeAcceleration + colorBaseRotationSpeed) : 0;
+        float rgbX = mod((polar.x + 3.1415926535)/(2*3.1415926535) + colorOffset, 1);
         if(rgbX > 0.5){
             rgbX = 1 - rgbX;
         }

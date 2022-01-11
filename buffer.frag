@@ -65,4 +65,19 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     }
 
+    if(fragCoord.y == smoothingLevel && fragCoord.x == 0){
+        float vol = 0;
+        for(int x = 0;x<iResolution.x;x++){
+            for(int y = 0;y<smoothingLevel;y++){
+                vol += texelFetch(iChannel2, ivec2(x,y),0).r;
+                vol += texelFetch(iChannel2, ivec2(x,y),0).g;
+            }
+        }
+        vol /= (iResolution.x * smoothingLevel * 2);
+
+        fragColor = vec4(vol, 0, 0, 0);
+     
+        
+    }
+
 }
