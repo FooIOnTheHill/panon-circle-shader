@@ -19,7 +19,7 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
 
 float divideIntoSections(in float x, in int sectionAmount) {
 
-    float sectionSize = (2 * 3.1415926535) / sectionAmount;
+    float sectionSize = (3.1415926535) / sectionAmount;
 
     return floor(x / sectionSize) * sectionSize;
 
@@ -46,24 +46,34 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     float cy = iResolution.y / 2;
     vec2 polar = euclideanToPolar(fragCoord, cx, cy);
 
-    float xPercentage = -1;
-    if(polar.x > 3.1415926535){
-        xPercentage = (2 * 3.1415926535 - polar.x) / 3.1415926535;
+    float amp, normalized;
+    if(polar.x > 0){
+        
+        normalized = polar.x / 3.1415926535;
+
     }else{
-        xPercentage = polar.x / 3.1415926535;
+
+        normalized = polar.x / -3.1415926535;
+        
     }
-    xPercentage = xPercentage;
-    xPercentage = mod(xPercentage, 1);
+
+    vec4 data = texture(iChannel1, vec2(divideIntoSections(normalized, 1024), 0));
+
+    
+    if(polar.x > 0){
+    
+        amp = data.r * amplification;
+
+    }else{
+        
+        amp = data.g * amplification;
+
+    }
 
 
-    vec2 dataX = vec2(xPercentage, 0);
-    vec4 data = texture(iChannel1, vec2(divideIntoSections(dataX.x, 1024),0));
-   
 
-    float amp = dataX.x > 0.5 ? data.g * amplification : data.r * amplification;
-    //fragColor = vec4(0,0,0,0);
     if(polar.y < r + amp && polar.y > r - borderWidth){
-        float rgbX = dataX.x;
+        float rgbX = normalized;
         if(rgbX > 0.5){
             rgbX = 1 - rgbX;
         }
