@@ -1,7 +1,7 @@
 #version 130
 #define circleRotationOffset $circleRotationOffset
 #define smoothingLevel $smoothingLevel
-#define barWidth $barWidth
+#define barWidth $barWidth / 100
 #define barAmount $barAmount
 
 //converts euclidean to polar coordinates (x,y) -> (phi,r)

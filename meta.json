@@ -3,24 +3,42 @@
         "name": "circleRadius",
         "default": 0.6,
         "type": "double",
-        "min":0,
-        "max":1
+        "min":0.0,
+        "max":100.0
+    },{
+        "name": "barWidth",
+        "default": 0.8,
+        "type": "float",
+        "min": 0.0,
+        "max": 100.0
+    }, {
+        "name": "drawBaseCircle",
+        "default": true,
+        "type": "bool"
+    }, {
+        "name": "circleRotationOffset",
+        "default": 90,
+        "type": "float",
+        "max":360,
+        "min":0
     }, {
         "name": "borderWidth",
         "default": 2,
         "type": "double",
         "min":0
     }, {
+        "name": "rotateCircle",
+        "default": false,
+        "type": "bool"
+    }, {
+        "name": "circleBaseRotationSpeed",
+        "default": 0.4,
+        "type": "float"
+    }, {
         "name": "amplification",
         "default": 30,
         "type": "double",
         "max":50,
-        "min":0
-    }, {
-        "name": "circleRotationOffset",
-        "default": 90,
-        "type": "float",
-        "max":360,
         "min":0
     }, {
         "name": "barAmount",
@@ -44,28 +62,10 @@
         "name": "colorBaseRotationSpeed",
         "default": 0.1,
         "type": "float"
-    }, {
-        "name": "rotateCircle",
-        "default": false,
-        "type": "bool"
-    }, {
-        "name": "circleBaseRotationSpeed",
-        "default": 0.4,
-        "type": "float"
-    }, {
+    },  {
         "name": "volumeIncreaseRadius",
         "default": 40,
         "type": "float"
-    }, {
-        "name": "barWidth",
-        "default": 0.8,
-        "type": "float",
-        "min": 0.0,
-        "max": 1.0
-    }, {
-        "name": "drawBaseCircle",
-        "default": true,
-        "type": "bool"
     }
     ]
 }

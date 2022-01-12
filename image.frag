@@ -1,6 +1,6 @@
 #version 130
 
-#define circleRadius $circleRadius
+#define circleRadius $circleRadius / 100
 #define borderWidth $borderWidth
 #define amplification $amplification
 #define circleRotationOffset $circleRotationOffset
@@ -12,10 +12,10 @@
 #define colorBaseRotationSpeed $colorBaseRotationSpeed
 #define circleBaseRotationSpeed $circleBaseRotationSpeed
 #define volumeIncreaseRadius $volumeIncreaseRadius
-#define barWidth $barWidth
+#define barWidth $barWidth / 100
 #define drawBaseCircle $drawBaseCircle
 
-//converts euclidean to polar coordinates (x,y) -> (phi,r)
+//converts euclidean to polar coordinates (x,y) -> (phi,d)
 vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
 
     float dx = vec.x - cx;
@@ -26,9 +26,18 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
         phi += float(iTime) * circleBaseRotationSpeed;
     }
     phi = mod(phi + 3.1415926535, 2 * 3.1415926535) - 3.1415926535;
-    float r = sqrt(pow(dx,2) + pow(dy,2));
+    float d = sqrt(pow(dx,2) + pow(dy,2));
 
-    return vec2(phi,r);
+    return vec2(phi,d);
+}
+
+//converts polar to euclidean coordinates (phi,d) -> (x,y)
+vec2 polarToEuclidean(in vec2 vec, in float cx, in float cy) {
+
+    float x = cx + vec.y * acos(vec.x);
+    float y = cy + vec.y * asin(vec.x);
+
+    return vec2(x,y);
 }
 
 float divideIntoSections(in float x, in int sectionAmount) {
@@ -46,16 +55,6 @@ float divideIntoSections(in float x, in int sectionAmount) {
     }
 
     
-}
-
-
-//converts polar to euclidean coordinates (phi,r) -> (x,y)
-vec2 polarToEuclidean(in vec2 vec, in float cx, in float cy) {
-
-    float x = cx + vec.y * acos(vec.x);
-    float y = cy + vec.y * asin(vec.x);
-
-    return vec2(x,y);
 }
 
 vec4 getRealRGB(float x, float alpha){
@@ -85,29 +84,23 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         
     }
 
-    vec4 data;// = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount / 2), 0));
-    vec4 oldData;
+    vec4 data;
     if(smoothing){
         float lowerBound = divideIntoSections(normalized, barAmount/2);
         if(lowerBound != -1){
             data = texelFetch(iChannel2, ivec2(lowerBound * iResolution.x, smoothingLevel), 0);
         }else{
-            if(!drawBaseCircle)return;//fragColor = vec4(0,0,0,0);
+            if(!drawBaseCircle)return;
         }
     }else{
         data = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount/2), 0));
     }
 
     if(polar.x > 0){
-    
         amp = data.r * amplification;
-
     }else{
-        
         amp = data.g * amplification;
-
     }
-
 
     if(polar.y > r - borderWidth){
         float colorOffset = rotateColor ? float(iTime) * colorBaseRotationSpeed : 0;
@@ -117,17 +110,11 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         }
         if(polar.y < r + amp){
             fragColor=getRealRGB(rgbX * 2, 1);
-            //fragColor=vec4(02,0,0, mod(polar.x,0.1) > 0.05 ? 1.0 : 0.1);
-        }else if(polar.y - r - amp < 5){
-            //fragColor=getRealRGB(rgbX, 0.05 );
         }else{
             fragColor = vec4(0,0,0,0);
         }
     }else{
         fragColor = vec4(0,0,0,0);
-    }
-    if(iBeat > 0){
-        fragColor = vec4(1.,1.,1.,1.);
     }
     
 }
