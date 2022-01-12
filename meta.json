@@ -1,13 +1,13 @@
 {
     "arguments": [{
         "name": "circleRadius",
-        "default": 0.6,
+        "default": 60,
         "type": "double",
         "min":0.0,
         "max":100.0
     },{
         "name": "barWidth",
-        "default": 0.8,
+        "default": 80,
         "type": "float",
         "min": 0.0,
         "max": 100.0
