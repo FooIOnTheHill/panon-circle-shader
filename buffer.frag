@@ -1,6 +1,8 @@
 #version 130
 #define circleRotationOffset $circleRotationOffset
 #define smoothingLevel $smoothingLevel
+#define barWidth $barWidth
+#define barAmount $barAmount
 
 //converts euclidean to polar coordinates (x,y) -> (phi,r)
 vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
@@ -17,9 +19,17 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
 
 float divideIntoSections(in float x, in int sectionAmount) {
 
-    float sectionSize = (3.1415926535) / sectionAmount;
+    float sectionSize = 1.0 / sectionAmount;
 
-    return floor(x / sectionSize) * sectionSize;
+    float actualSectionSize = barWidth * sectionSize;
+    float gapSize = ((1-barWidth)/2) * sectionSize;
+
+    float sectionLowerBound = floor(x / sectionSize) * sectionSize;
+    if(x > sectionLowerBound + gapSize && x <= sectionLowerBound + sectionSize - gapSize){
+        return sectionLowerBound;
+    }else{
+        return -1;
+    }
 
     
 }
@@ -64,8 +74,16 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         fragColor = texelFetch(iChannel2, ivec2(fragCoord.x, fragCoord.y), 0);
 
     }
-
-    if(fragCoord.y == smoothingLevel && fragCoord.x == 0){
+    if(fragCoord.y == smoothingLevel){
+        float sectionSize = 1.0 / barAmount;
+        vec4 value = vec4(0,0,0,0);
+        for(int i = 0;i<smoothingLevel;i++){
+            vec4 val = texelFetch(iChannel2, ivec2(fragCoord.x, i),0);
+            value += val;
+        }
+        fragColor = value/smoothingLevel;
+    }
+    if(fragCoord.y == smoothingLevel + 1 && fragCoord.x == 0){
         float vol = 0;
         for(int x = 0;x<iResolution.x;x++){
             for(int y = 0;y<smoothingLevel;y++){
@@ -76,7 +94,6 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
         vol /= (iResolution.x * smoothingLevel * 2);
 
         fragColor = vec4(vol, 0, 0, 0);
-     
         
     }
 

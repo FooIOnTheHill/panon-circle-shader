@@ -10,9 +10,10 @@
 #define rotateColor $rotateColor
 #define rotateCircle $rotateCircle
 #define colorBaseRotationSpeed $colorBaseRotationSpeed
-#define colorRotationVolumeAcceleration $colorRotationVolumeAcceleration
 #define circleBaseRotationSpeed $circleBaseRotationSpeed
-#define circleRotationVolumeAcceleration $circleRotationVolumeAcceleration
+#define volumeIncreaseRadius $volumeIncreaseRadius
+#define barWidth $barWidth
+#define drawBaseCircle $drawBaseCircle
 
 //converts euclidean to polar coordinates (x,y) -> (phi,r)
 vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
@@ -22,7 +23,7 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
     float volume = texelFetch(iChannel2, ivec2(0, smoothingLevel),0).x;
     float phi = atan(dy, dx) - (circleRotationOffset / 360) * 2 * 3.1415926535;
     if(rotateCircle){
-        phi -= float(iTime) * (volume * circleRotationVolumeAcceleration + circleBaseRotationSpeed);
+        phi += float(iTime) * circleBaseRotationSpeed;
     }
     phi = mod(phi + 3.1415926535, 2 * 3.1415926535) - 3.1415926535;
     float r = sqrt(pow(dx,2) + pow(dy,2));
@@ -30,11 +31,21 @@ vec2 euclideanToPolar(in vec2 vec, in float cx, in float cy) {
     return vec2(phi,r);
 }
 
-float divideIntoSections(in float x, in float sectionAmount) {
+float divideIntoSections(in float x, in int sectionAmount) {
 
-    float sectionSize = (3.1415926535) / (sectionAmount * 2);
+    float sectionSize = 1.0 / sectionAmount;
 
-    return floor(x / sectionSize) * sectionSize;
+    float actualSectionSize = barWidth * sectionSize;
+    float gapSize = ((1-barWidth)/2) * sectionSize;
+
+    float sectionLowerBound = floor(x / sectionSize) * sectionSize;
+    if(x > sectionLowerBound + gapSize && x <= sectionLowerBound + sectionSize - gapSize){
+        return sectionLowerBound;
+    }else{
+        return -1;
+    }
+
+    
 }
 
 
@@ -56,7 +67,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
     float volume = texelFetch(iChannel2, ivec2(0, smoothingLevel),0).x;
 
-    float r = circleRadius * iResolution.y + volume * 200.0;
+    float r = 0.5 * circleRadius * iResolution.y + volume * volumeIncreaseRadius;
     float strokeWidth = borderWidth;
 
     float cx = iResolution.x / 2;
@@ -77,15 +88,15 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
     vec4 data;// = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount / 2), 0));
     vec4 oldData;
     if(smoothing){
-        for(int i = 0;i<smoothingLevel;i++){
-            data = data + texelFetch(iChannel2, ivec2(divideIntoSections(normalized, barAmount) * iResolution.x, i), 0);
+        float lowerBound = divideIntoSections(normalized, barAmount/2);
+        if(lowerBound != -1){
+            data = texelFetch(iChannel2, ivec2(lowerBound * iResolution.x, smoothingLevel), 0);
+        }else{
+            if(!drawBaseCircle)return;//fragColor = vec4(0,0,0,0);
         }
-        data = data / smoothingLevel;
     }else{
-        data = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount), 0));
+        data = texture(iChannel1, vec2(divideIntoSections(normalized, barAmount/2), 0));
     }
-
-    
 
     if(polar.x > 0){
     
@@ -99,7 +110,7 @@ void mainImage(out vec4 fragColor, in vec2 fragCoord) {
 
 
     if(polar.y > r - borderWidth){
-        float colorOffset = rotateColor ? float(iTime) * (volume * colorRotationVolumeAcceleration + colorBaseRotationSpeed) : 0;
+        float colorOffset = rotateColor ? float(iTime) * colorBaseRotationSpeed : 0;
         float rgbX = mod((polar.x + 3.1415926535)/(2*3.1415926535) + colorOffset, 1);
         if(rgbX > 0.5){
             rgbX = 1 - rgbX;
